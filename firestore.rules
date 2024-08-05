@@ -1,0 +1,43 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    function isUserWhitelist() {
+      // Get the user's ID from the request
+      let userId = request.auth.uid;
+      
+      // Check if the user's ID exists in the admins collection
+      return exists(/databases/$(database)/documents/whitelist/$(userId));
+    }
+    
+    function isUserAdmin() {
+      // Get the user's ID from the request
+      let userId = request.auth.uid;
+      
+      // Check if the user's ID exists in the admins collection
+      return exists(/databases/$(database)/documents/admins/$(userId));
+    }
+  
+    match /pointEntries/{pointEntry} {
+    	allow read: if true;
+      allow write: if isUserWhitelist() || isUserAdmin();
+    }
+    
+    match /students/{student} {
+    	allow read: if true;
+      allow write: if isUserAdmin();
+    }
+    
+    match /whitelist/{whitelist} {
+    	allow read: if true;
+      allow write: if false;
+    }
+    
+    match /admins/{admin} {
+    	allow read: if true;
+      allow write: if false;
+    }
+    
+  }
+}
